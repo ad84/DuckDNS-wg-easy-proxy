@@ -1,0 +1,5 @@
+.env
+test/
+acmeout/
+wg-easy/
+nginx/ssl/
