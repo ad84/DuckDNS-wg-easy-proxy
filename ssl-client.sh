@@ -12,9 +12,9 @@ export $(grep -v '^#' .env | xargs -d '\n') # import .env variables
 
 
 echo -e  "${NC}"
-echo -e "Getting, and installing certificates (and setting auto-renewals) for ${RED}$WG_SERVER_HOST, vpn.$WG_SERVER_HOST & *.$WG_SERVER_HOST"
-echo -e  "${NC}"
-sleep 2
+echo -e "Getting, and installing certificates (and setting auto-renewals) for ${GREEN}$WG_SERVER_HOST, vpn.$WG_SERVER_HOST & *.$WG_SERVER_HOST"
+echo -e  "${NC}This may take a little time ."
+sleep 5
 
 #vpn.yourdomain.duckdns.org
 docker exec acme.sh --issue --dns dns_duckdns --insecure -d vpn.$WG_SERVER_HOST -k ec-256 --server letsencrypt
@@ -29,6 +29,10 @@ docker exec -e DEPLOY_DOCKER_CONTAINER_LABEL=sh.acme.autoload.domain=$WG_SERVER_
 docker exec acme.sh --issue --dns dns_duckdns --insecure -d *.$WG_SERVER_HOST -d $WG_SERVER_HOST -k ec-256  --server  letsencrypt
 docker exec -e DEPLOY_DOCKER_CONTAINER_LABEL=sh.acme.autoload.domain=$WG_SERVER_HOST -e DEPLOY_DOCKER_CONTAINER_KEY_FILE="/etc/nginx/ssl/wildcard.$WG_SERVER_HOST/key.pem" -e DEPLOY_DOCKER_CONTAINER_FULLCHAIN_FILE="/etc/nginx/ssl/wildcard.$WG_SERVER_HOST/full.pem" -e DEPLOY_DOCKER_CONTAINER_RELOAD_CMD="nginx -s reload" acme.sh --deploy -d *.$WG_SERVER_HOST --ecc --deploy-hook docker
 echo -e ""
+docker exec nginx sh -c 'mv /etc/nginx/conf.d/default-server.conf.bak /etc/nginx/conf.d/default-server.conf'
+docker exec nginx sh -c 'mv /etc/nginx/conf.d/wg-easy.conf.bak /etc/nginx/conf.d/wg-easy.conf'
+docker exec nginx sh -c 'nginx -s reload'
+
 echo -e "${GREEN}All done."
 echo -e "${NC}The wg-easy web-admin is avaible at https://vpn.${WG_SERVER_HOST} "
 
