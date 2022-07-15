@@ -4,4 +4,6 @@ test/
 acmeout/
 wg-easy/
 nginx/ssl/
+nginx/conf.d/*.conf
+nginx/conf.d/*.bak
 *.pfx
