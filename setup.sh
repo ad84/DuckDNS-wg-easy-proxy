@@ -1,63 +1,40 @@
 #!/usr/bin/env bash
-export $(grep -v '^#' .env | xargs -d '\n') # import .env variables
+#set up some colours 
 RED='\033[0;31m'
-NC='\033[0m' # No Color
 GREEN='\033[0;32m'
+NC='\033[0m' # No Color
 
-_uid="$(id -u)"
+echo -e  "${GREEN}Setting up WireGuard server..."
+docker compose up -d --build
 
-mkdir -p ./admin-ca/$WG_ADMIN_NAME
-mkdir ./admin-ca/private
-mkdir ./admin-ca/public
-echo -e "${GREEN}Generating Self-sgined CA for client access to web gui (HTTPS certs are signed by letsencrypt)."
-echo -e "${NC}Please enter an export password for the pfx file when promted, press enter twice for no password."
+export $(grep -v '^#' .env | xargs -d '\n') # import .env variables
 
-# set up siging request files. For CA:
-cat <<EOF > ./admin-ca/CAconfig.conf
-[req] 
-prompt = no 
-encrypt_key = no 
-default_md = sha512 
-distinguished_name = dname 
- 
-[dname] 
-CN = $WG_SERVER_HOST
-emailAddress = $WG_ADMIN_EMAIL
-EOF
-# and for client:
-cat <<EOF > ./admin-ca/UserConifg.conf
-[req] 
-prompt = no 
-encrypt_key = no 
-default_md = sha512 
-distinguished_name = dname 
- 
-[dname] 
-CN = $WG_ADMIN_NAME
-emailAddress = $WG_ADMIN_EMAIL
-EOF
 
-openssl ecparam -genkey -name secp384r1 | openssl ec -out ./admin-ca/private/ec.key 
-openssl req -new -x509 -days 3650 -key ./admin-ca/private/ec.key -out ./admin-ca/public/wireguard-admin-ca.crt -config ./admin-ca/CAconfig.conf
-openssl ecparam -genkey -name prime256v1 | openssl ec -out ./admin-ca/$WG_ADMIN_NAME/$WG_ADMIN_NAME.key
-openssl req -new -config ./admin-ca/UserConifg.conf -key ./admin-ca/$WG_ADMIN_NAME/$WG_ADMIN_NAME.key -out ./admin-ca/$WG_ADMIN_NAME/$WG_ADMIN_NAME.csr
-openssl x509 -req -days 365 -in  ./admin-ca/$WG_ADMIN_NAME/$WG_ADMIN_NAME.csr -CA ./admin-ca/public/wireguard-admin-ca.crt -CAkey ./admin-ca/private/ec.key -set_serial 01 -out ./admin-ca/$WG_ADMIN_NAME/$WG_ADMIN_NAME.crt -sha512
-openssl pkcs12 -export -out ./$WG_ADMIN_NAME.pfx -inkey ./admin-ca/$WG_ADMIN_NAME/$WG_ADMIN_NAME.key -in ./admin-ca/$WG_ADMIN_NAME/$WG_ADMIN_NAME.crt -certfile ./admin-ca/public/wireguard-admin-ca.crt
-mkdir ./nginx/ssl/admin-ca
-cp ./admin-ca/public/wireguard-admin-ca.crt ./nginx/ssl/admin-ca/
 
-#clean up
-chown $_uid:$_uid $WG_ADMIN_NAME.pfx
+echo -e  "${NC}"
+echo -e "Getting, and installing certificates (and setting auto-renewals) for ${GREEN}$WG_SERVER_HOST, vpn.$WG_SERVER_HOST & *.$WG_SERVER_HOST"
+echo -e  "${NC}This may take a little time ."
+sleep 5
 
-echo -e "Confiuring Nginx container."
-#todo - docker exec etc 
-docker exec nginx sh -c 'mv /etc/nginx/conf.d/wg-easy-auth.conf.bak /etc/nginx/conf.d/wg-easy-auth.conf'
-docker exec nginx sh -c 'mv /etc/nginx/conf.d/wg-easy.conf etc/nginx/conf.d/wg-easy.conf.bak'
+#vpn.yourdomain.duckdns.org
+docker exec acme.sh --issue --dns dns_duckdns --insecure -d vpn.$WG_SERVER_HOST -k ec-256 --server letsencrypt
+
+docker exec -e DEPLOY_DOCKER_CONTAINER_LABEL=sh.acme.autoload.domain=$WG_SERVER_HOST -e DEPLOY_DOCKER_CONTAINER_KEY_FILE="/etc/nginx/ssl/vpn.$WG_SERVER_HOST/key.pem" -e DEPLOY_DOCKER_CONTAINER_FULLCHAIN_FILE="/etc/nginx/ssl/vpn.$WG_SERVER_HOST/full.pem" -e DEPLOY_DOCKER_CONTAINER_RELOAD_CMD="nginx -s reload" acme.sh --deploy -d vpn.$WG_SERVER_HOST --ecc --deploy-hook docker
+
+# main domain for verification - duckdns has same txt record for all subdomains, this way domain is already verified when we make the wildcard later 
+docker exec acme.sh --issue --dns dns_duckdns --insecure -d $WG_SERVER_HOST -k ec-256  --server  letsencrypt
+docker exec -e DEPLOY_DOCKER_CONTAINER_LABEL=sh.acme.autoload.domain=$WG_SERVER_HOST -e DEPLOY_DOCKER_CONTAINER_KEY_FILE="/etc/nginx/ssl/$WG_SERVER_HOST/key.pem" -e DEPLOY_DOCKER_CONTAINER_FULLCHAIN_FILE="/etc/nginx/ssl/$WG_SERVER_HOST/full.pem" -e DEPLOY_DOCKER_CONTAINER_RELOAD_CMD="nginx -s reload" acme.sh --deploy -d $WG_SERVER_HOST --ecc --deploy-hook docker
+
+# wild card cert 
+docker exec acme.sh --issue --dns dns_duckdns --insecure -d *.$WG_SERVER_HOST -d $WG_SERVER_HOST -k ec-256  --server  letsencrypt
+docker exec -e DEPLOY_DOCKER_CONTAINER_LABEL=sh.acme.autoload.domain=$WG_SERVER_HOST -e DEPLOY_DOCKER_CONTAINER_KEY_FILE="/etc/nginx/ssl/wildcard.$WG_SERVER_HOST/key.pem" -e DEPLOY_DOCKER_CONTAINER_FULLCHAIN_FILE="/etc/nginx/ssl/wildcard.$WG_SERVER_HOST/full.pem" -e DEPLOY_DOCKER_CONTAINER_RELOAD_CMD="nginx -s reload" acme.sh --deploy -d *.$WG_SERVER_HOST --ecc --deploy-hook docker
+echo -e ""
+docker exec nginx sh -c 'mv /etc/nginx/conf.d/default-server.conf.bak /etc/nginx/conf.d/default-server.conf'
+docker exec nginx sh -c 'mv /etc/nginx/conf.d/wg-easy.conf.bak /etc/nginx/conf.d/wg-easy.conf'
 docker exec nginx sh -c 'nginx -s reload'
 
 echo -e "${GREEN}All done."
-echo -e "${NC}To gain access to the web admin you must now install the pxf file into your OS/browser on the client device."
-echo -e "The file is loacted at ./$WG_ADMIN_NAME.pfx"
-echo -e "${NC}Please copy to the client and install."
+echo -e "${NC}The wg-easy web-admin is avaible at https://vpn.${WG_SERVER_HOST} "
+
 
 unset $(grep -v '^#' .env | sed -E 's/(.*)=.*/\1/' | xargs)
