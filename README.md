@@ -7,7 +7,7 @@ Scripts for [DuckDNS](http://www.duckdns.org/) domain to automate nginx reverve 
 
 1. clone this repo
  ```
- git clone https://github.com/ad84/wg-easy-auto-proxy.git
+ git clone https://github.com/ad84/DuckDNS-wg-easy-proxy.git
  ```
 
 2. cd into the project direcory, rename `example.env` to `.env` and change the default vaules & others as required.
