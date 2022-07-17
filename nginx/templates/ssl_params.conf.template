@@ -12,4 +12,4 @@ ssl_prefer_server_ciphers off;
 ssl_stapling on;
 ssl_stapling_verify on;
  # replace with the IP address of your resolver
-resolver 127.0.0.1;
+resolver 1.1.1.1;
