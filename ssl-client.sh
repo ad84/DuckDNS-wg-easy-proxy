@@ -4,7 +4,10 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 GREEN='\033[0;32m'
 
-_uid="$(id -u)"
+# _uid="$(id -u)"
+_uid=$SUDO_USER
+
+
 
 mkdir -p ./admin-ca/$WG_ADMIN_NAME
 mkdir ./admin-ca/private
@@ -49,11 +52,15 @@ cp ./admin-ca/public/wireguard-admin-ca.crt ./nginx/ssl/admin-ca/
 #clean up
 chown $_uid:$_uid $WG_ADMIN_NAME.pfx
 
+configure_container () {
 echo -e "Confiuring Nginx container."
 #todo - docker exec etc 
 docker exec nginx sh -c 'mv /etc/nginx/conf.d/wg-easy-auth.conf.bak /etc/nginx/conf.d/wg-easy-auth.conf'
 docker exec nginx sh -c 'mv /etc/nginx/conf.d/wg-easy.conf etc/nginx/conf.d/wg-easy.conf.bak'
 docker exec nginx sh -c 'nginx -s reload'
+}
+
+configure_container
 
 echo -e "${GREEN}All done."
 echo -e "${NC}To gain access to the web admin you must now install the pxf file into your OS/browser on the client device."

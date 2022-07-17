@@ -3,9 +3,8 @@ services:
   wg-easy:
     environment:
       - WG_HOST=vpn.${WG_SERVER_HOST}
-     
       - PASSWORD
-      # - WG_PORT
+      - WG_PORT
       # Optional:
       # - WG_DEFAULT_ADDRESS
       # - WG_DEFAULT_DNS
@@ -22,8 +21,8 @@ services:
     volumes:
       - ./wg-easy:/etc/wireguard
     ports:
-      - "51820:51820/udp"
-      - "51821:51821/tcp"
+      - "${WG_PORT}:${WG_PORT}/udp"
+      # - "51821:51821/tcp"
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
@@ -38,7 +37,7 @@ services:
       - sh.acme.autoload.domain=${WG_SERVER_HOST}
     volumes:
       - ./nginx:/etc/nginx
-      - /var/log/wireguard-server:/var/log/nginx
+      - ./log/nginx:/var/log/nginx
     environment:
       - WG_SERVER_HOST
 

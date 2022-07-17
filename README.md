@@ -1,6 +1,5 @@
 # wg-easy-auto-proxy
-Scripts for [DuckDNS](http://www.duckdns.org/) domain to automate reverve proxy for [wg-easy](https://github.com/WeeJeWel/wg-easy), with nginx and [acme.sh](https://github.com/acmesh-official/acme.sh) for certifacte generation and automatic renewal.  
-Uses docker compose. 
+Scripts for [DuckDNS](http://www.duckdns.org/) domain to automate nginx reverve proxy for [wg-easy](https://github.com/WeeJeWel/wg-easy). Uses [acme.sh](https://github.com/acmesh-official/acme.sh) (for) certifacte generation and automatic renewal) and docker compose. 
 
 ## How to use:
 
@@ -23,7 +22,7 @@ sudo ./setup.sh
 ```
 sudo ./ssl-client.sh
 ```
-2. Now to gain access to the web admin you must now install the client (WG_ADMIN_NAME) pxf file into your OS/browser on the client device (as well as the enter the password for easy-wg). The pfx file will be in the project root. Copy (scp, rysnc etc.) to you device. The pfx file can be resued on as many devices as required and is valid for one year. (By which time i may have written a renwal script :) ) 
+2. Now to gain access to the web admin you must now install the client (WG_ADMIN_NAME) pxf file into your OS/browser on the client device (as well as the enter the password for wg-easy). The pfx file will be in the project root. Copy (scp, rysnc etc.) to you device. The pfx file can be resued on as many devices as required and is valid for one year. (By which time i may have written a renwal script :) ) 
 
 
 

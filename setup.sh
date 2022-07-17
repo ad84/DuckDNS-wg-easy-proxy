@@ -36,5 +36,6 @@ docker exec nginx sh -c 'nginx -s reload'
 echo -e "${GREEN}All done."
 echo -e "${NC}The wg-easy web-admin is avaible at https://vpn.${WG_SERVER_HOST} "
 
+mkdir ./log/nginx
 
 unset $(grep -v '^#' .env | sed -E 's/(.*)=.*/\1/' | xargs)
