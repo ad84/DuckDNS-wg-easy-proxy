@@ -1,6 +1,5 @@
 .env
 admin-ca/
-test/
 acmeout/
 wg-easy/
 nginx/ssl/
