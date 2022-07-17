@@ -10,9 +10,9 @@ Scripts for [DuckDNS](http://www.duckdns.org/) domain to automate nginx reverse 
  git clone https://github.com/ad84/DuckDNS-wg-easy-proxy.git
  ```
 
-2. cd into the project direcory, rename `example.env` to `.env` and change the default vaules & others as required.
+2. `cd` into the project directory, rename `example.env` to `.env` and change the default values & others as required.
 
-3. run the inital install scrpit to bring the containers up and istall ssl certificates 
+3. run the initial install script to bring the containers up and install ssl certificates 
 ```
 sudo ./setup.sh
 ```
