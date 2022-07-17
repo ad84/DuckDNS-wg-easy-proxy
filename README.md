@@ -1,6 +1,6 @@
 # DuckDNS-wg-easy-proxy
 
-Scripts for [DuckDNS](http://www.duckdns.org/) domain to automate nginx reverve proxy for [wg-easy](https://github.com/WeeJeWel/wg-easy). Uses [acme.sh](https://github.com/acmesh-official/acme.sh) (for) certifacte generation and automatic renewal) and docker compose. 
+Scripts for [DuckDNS](http://www.duckdns.org/) domain to automate nginx reverve proxy for [wg-easy](https://github.com/WeeJeWel/wg-easy). Uses [acme.sh](https://github.com/acmesh-official/acme.sh) (for certifacte generation and automatic renewal) and docker compose. 
 
 ## How to use:
 
